@@ -1,10 +1,31 @@
-import styles from "./Card.module.css";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "../Button/Button";
+import { updateUser } from "../../services/user.service";
+
 import Logo from "../../assets/Logo.svg?react";
 import image from "../../assets/cardHeader.png";
 
-export const Card = () => {
+import styles from "./Card.module.css";
+
+
+export const Card = ({ card }) => {
+  const client = useQueryClient();
+
+  const { mutate: follow } = useMutation({
+    mutationFn: updateUser,
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+
+  function addCommasToNumber(number) {
+    var numberString = number.toString();
+    var regex = /(\d)(?=(\d{3})+(?!\d))/g;
+    return numberString.replace(regex, "$1,");
+  }
+
   return (
-    <div className={styles.card}>
+    <li className={styles.card}>
       <div className={styles.header}>
         <Logo className={styles.logo} />
         <img className={styles.image} src={image} alt="quiz" />
@@ -13,15 +34,27 @@ export const Card = () => {
         <div className={styles.userContent}>
           <hr className={styles.strip} />
           <div className={styles.user}>
-            <img className={styles.userImage} src="" alt="user image" />
+            <img
+              className={styles.userImage}
+              src={card.avatar}
+              alt="user image"
+            />
           </div>
         </div>
         <div className={styles.userInfo}>
-          <p>777 TWEETS</p>
-          <p>100,500 FOLLOWERS</p>
+          <p>{card.tweets} TWEETS</p>
+          <p>{addCommasToNumber(card.followers)} FOLLOWERS</p>
         </div>
-        <button className={styles.btn} type="button">FOLLOW</button>
+        <Button
+          propStyles={
+            card.isFollowing
+              ? `${styles.btn} ${styles.following}`
+              : `${styles.btn}`
+          }
+          handleClick={() => follow(card)}
+          text={card.isFollowing ? "FOLLOWING" : "FOLLOW"}
+        />
       </div>
-    </div>
+    </li>
   );
 };
