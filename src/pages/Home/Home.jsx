@@ -8,7 +8,6 @@ import styles from "./Home.module.css";
 export const Home = () => {
   const navigate = useNavigate();
   const params = useParams();
-  console.log(params);
   useEffect(() => {
     if (params["*"]) navigate("/");
   }, [navigate, params]);

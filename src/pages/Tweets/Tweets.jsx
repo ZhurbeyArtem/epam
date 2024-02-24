@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { useUser } from "../../hooks/useUser";
 
@@ -17,8 +17,6 @@ export const Tweets = () => {
   const [filter, setFilter] = useState("all");
   const indexOfLastCard = currentPage * cardsPerPage;
 
-  const params = useParams()
-  console.log(params);
 
   function filteredCards() {
     return cards?.filter((card) => {
