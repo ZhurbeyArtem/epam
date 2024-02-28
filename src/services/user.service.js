@@ -1,9 +1,22 @@
 import axios from "axios";
 
-export const getUsers = async () => {
+export const getUsers = async ({pageParam = 1}) => {
   try {
-    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/users`);
-    return data;
+    console.log(pageParam);
+    const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/users`, {
+      params: {
+        page: pageParam,
+        limit: 6
+      },
+    });
+    const { data: tweetsLen } = await axios.get(
+      `${import.meta.env.VITE_API_URL}/users`
+    );
+
+    return {
+      tweets: data,
+      maxPages: Math.ceil(tweetsLen.length / 6),
+    };
   } catch (e) {
     return e;
   }

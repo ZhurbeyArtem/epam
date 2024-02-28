@@ -7,7 +7,6 @@ import image from "../../assets/cardHeader.png";
 
 import styles from "./Card.module.css";
 
-
 export const Card = ({ card }) => {
   const client = useQueryClient();
 

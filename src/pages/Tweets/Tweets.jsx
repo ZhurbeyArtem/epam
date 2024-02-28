@@ -1,25 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { useUser } from "../../hooks/useUser";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { Card } from "../../components/Card/Card";
 import { Button } from "../../components/Button/Button";
 
 import styles from "./Tweets.module.css";
 import { Dropdown } from "../../components/Dropdown/Dropdown";
+import { getUsers } from "../../services/user.service";
+import { useInView } from "react-intersection-observer";
 
 export const Tweets = () => {
-  const { isLoading, data: cards } = useUser();
-  const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
-  const cardsPerPage = 6;
-  const [filter, setFilter] = useState("all");
-  const indexOfLastCard = currentPage * cardsPerPage;
+  const { isLoading, data, fetchNextPage, isFetchingNextPage, hasNextPage } =
+    useInfiniteQuery({
+      queryKey: ["users"],
+      queryFn: getUsers,
+      initialPageParam: 1,
+      getNextPageParam: (_, pages) => pages.length + 1,
+    });
 
+  const { ref, inView } = useInView({
+    threshold: 1,
+  });
+
+  useEffect(() => {
+    if (
+      inView &&
+      !isFetchingNextPage &&
+      hasNextPage &&
+      data?.pageParams.length !== data?.pages[0].maxPages
+    ) {
+      fetchNextPage();
+    }
+  }, [inView, isFetchingNextPage, fetchNextPage, hasNextPage, data]);
+
+  const [filter, setFilter] = useState("all");
+  const tweets = data?.pages.flatMap((page) => page.tweets) ?? [];
 
   function filteredCards() {
-    return cards?.filter((card) => {
+    return tweets?.filter((card) => {
       if (filter === "all") return true;
       if (filter === "followings") {
         return card.isFollowing === true;
@@ -28,17 +48,6 @@ export const Tweets = () => {
       return false;
     });
   }
-
-  const currentCards = filteredCards()?.slice(0, indexOfLastCard);
-
-  const maxCurrenCards = filteredCards()?.length;
-
-  const paginate = () => setCurrentPage((prevState) => prevState + 1);
-
-  const handleFilterChange = (newFilter) => {
-    setCurrentPage(1);
-    setFilter(newFilter);
-  };
 
   return isLoading ? (
     <p>Loading...</p>
@@ -49,19 +58,13 @@ export const Tweets = () => {
         handleClick={() => navigate("/")}
         text={"Back"}
       />
-      <Dropdown filter={filter} setFilter={handleFilterChange} />
+      <Dropdown filter={filter} setFilter={setFilter} />
       <ul className={styles.list}>
-        {currentCards.map((el) => (
+        {filteredCards().map((el) => (
           <Card key={el.id} card={el} />
         ))}
       </ul>
-      {currentCards.length !== maxCurrenCards && (
-        <Button
-          propStyles={styles.loadMoreBtn}
-          handleClick={paginate}
-          text={"Load More"}
-        />
-      )}
+      <div ref={ref}>{isFetchingNextPage && "Loading..."}</div>
     </div>
   );
 };
