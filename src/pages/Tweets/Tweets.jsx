@@ -39,12 +39,12 @@ export const Tweets = () => {
   const tweets = data?.pages.flatMap((page) => page.tweets) ?? [];
 
   function filteredCards() {
-    return tweets?.filter((card) => {
+    return tweets?.filter((tweet) => {
       if (filter === "all") return true;
       if (filter === "followings") {
-        return card.isFollowing === true;
+        return tweet.isFollowing === true;
       }
-      if (filter === "follow") return card.isFollowing === false;
+      if (filter === "follow") return tweet.isFollowing === false;
       return false;
     });
   }
