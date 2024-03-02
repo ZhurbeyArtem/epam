@@ -9,6 +9,8 @@ import styles from "./Tweets.module.css";
 import { Dropdown } from "../../components/Dropdown/Dropdown";
 import { getUsers } from "../../services/user.service";
 import { useInView } from "react-intersection-observer";
+import { IUserGet, UserData } from "../../interfaces/User.interface";
+
 
 export const Tweets = () => {
   const navigate = useNavigate();
@@ -17,26 +19,36 @@ export const Tweets = () => {
       queryKey: ["users"],
       queryFn: getUsers,
       initialPageParam: 1,
-      getNextPageParam: (_, pages) => pages.length + 1,
+      getNextPageParam: (currentData, _, currentPage) => {
+        if (currentData instanceof Error) {
+          return undefined;
+        }
+
+        const max = currentData?.maxPages;
+
+        if (currentPage === max) {
+          return undefined
+        }
+        return currentPage + 1
+      },
     });
 
   const { ref, inView } = useInView({
-    threshold: 1,
+    threshold: 0,
   });
 
   useEffect(() => {
     if (
       inView &&
       !isFetchingNextPage &&
-      hasNextPage &&
-      data?.pageParams.length !== data?.pages[0].maxPages
+      hasNextPage
     ) {
       fetchNextPage();
     }
-  }, [inView, isFetchingNextPage, fetchNextPage, hasNextPage, data]);
+  }, [inView, isFetchingNextPage, fetchNextPage, hasNextPage]);
 
   const [filter, setFilter] = useState("all");
-  const tweets = data?.pages.flatMap((page) => page.tweets) ?? [];
+  const tweets = data?.pages.flatMap((page) => (page as IUserGet).tweets) ?? [];
 
   function filteredCards() {
     return tweets?.filter((tweet) => {
@@ -64,7 +76,9 @@ export const Tweets = () => {
           <Card key={el.id} card={el} />
         ))}
       </ul>
-      <div ref={ref}>{isFetchingNextPage && "Loading..."}</div>
+      <div
+        className={styles.ref}
+        ref={ref}>{isFetchingNextPage && "Loading..."}</div>
     </div>
   );
 };

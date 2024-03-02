@@ -1,13 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { FC } from "react";
+
 import { Button } from "../Button/Button";
+
 import { updateUser } from "../../services/user.service";
+import { CardProps } from "../../interfaces/Card.interface";
+
 
 import Logo from "../../assets/Logo.svg?react";
 import image from "../../assets/cardHeader.png";
-
 import styles from "./Card.module.css";
 
-export const Card = ({ card }) => {
+
+
+export const Card: FC<CardProps> = ({ card }) => {
   const client = useQueryClient();
 
   const { mutate: follow } = useMutation({
@@ -17,9 +23,9 @@ export const Card = ({ card }) => {
     },
   });
 
-  function addCommasToNumber(number) {
-    var numberString = number.toString();
-    var regex = /(\d)(?=(\d{3})+(?!\d))/g;
+  function addCommasToNumber(number: number): string {
+    const numberString = number.toString();
+    const regex = /(\d)(?=(\d{3})+(?!\d))/g;
     return numberString.replace(regex, "$1,");
   }
 

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { FC, useState } from "react";
 
 import styles from "./Dropdown.module.css";
+import { DropdownProps } from "../../interfaces/Dropdown.interface";
 
-export const Dropdown = ({ filter, setFilter }) => {
+export const Dropdown: FC<DropdownProps> = ({ filter, setFilter }) => {
   const [showList, setShowList] = useState(false);
 
   const data = [
@@ -15,7 +16,7 @@ export const Dropdown = ({ filter, setFilter }) => {
     if (el.value === filter) return el;
   })[0].name;
 
-  const handleChange = (val) => {
+  const handleChange = (val:string) => {
     setFilter(val);
     setShowList(false);
   };
