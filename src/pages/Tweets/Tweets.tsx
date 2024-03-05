@@ -9,7 +9,8 @@ import styles from "./Tweets.module.css";
 import { Dropdown } from "../../components/Dropdown/Dropdown";
 import { getUsers } from "../../services/user.service";
 import { useInView } from "react-intersection-observer";
-import { IUserGet, UserData } from "../../interfaces/User.interface";
+import { IUserGet } from "../../interfaces/User.interface";
+import { Video } from "../../components/Video/Video";
 
 
 export const Tweets = () => {
@@ -79,6 +80,7 @@ export const Tweets = () => {
       <div
         className={styles.ref}
         ref={ref}>{isFetchingNextPage && "Loading..."}</div>
+      <Video />
     </div>
   );
 };
