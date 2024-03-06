@@ -1,7 +1,6 @@
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, UserConfig } from "vite";
 import svgr from "vite-plugin-svgr";
-import { UserConfig } from "vite";
 
 const config: UserConfig = defineConfig({
   plugins: [react(), svgr()],
