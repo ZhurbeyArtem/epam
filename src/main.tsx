@@ -1,10 +1,11 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { RouterProvider } from "react-router-dom";
 import "modern-normalize/modern-normalize.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 
 import "./index.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider } from "react-router-dom";
 import { router } from "./routes/router.js";
 
 const queryClient = new QueryClient();
@@ -16,9 +17,11 @@ if (container) {
   
   root.render(
     <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
+      {/* <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
-      </QueryClientProvider>
+      </QueryClientProvider> */}
+
+      <div>hi it`s test for vercel</div>
     </React.StrictMode>
   )
 } else {
