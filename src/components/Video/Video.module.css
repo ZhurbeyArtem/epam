@@ -1,5 +1,22 @@
-.video{
+.video {
   position: fixed;
   top: 0;
   right: 0;
+}
+
+.loading {
+  width: 352px;
+  height: 288px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: lightblue;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+}
+
+.loaded {
+  display: none;
 }

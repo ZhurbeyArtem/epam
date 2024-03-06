@@ -8,7 +8,7 @@ import * as fp from 'fingerpose';
 import { thumbsDownGesture } from '../../fingers/ThumbDown';
 import { thumbsUpGesture } from '../../fingers/ThumbUp';
 import { PixelInput } from '@tensorflow-models/hand-pose-detection/dist/shared/calculators/interfaces/common_interfaces';
-import { IConfig} from '../../interfaces/Video';
+import { IConfig } from '../../interfaces/Video';
 
 const config: IConfig = {
   width: 300,
@@ -18,6 +18,7 @@ const config: IConfig = {
 
 export const Video = () => {
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false)
   const [ready, setReady] = useState<boolean>(false);
   const modelRef = useRef<null | handPoseDetection.HandDetector>(null);
   const cameraRef = useRef<null | Webcam>(null);
@@ -50,6 +51,7 @@ export const Video = () => {
 
       const hands: handPoseDetection.Hand[] = await modelRef.current.estimateHands((cameraRef.current as Webcam).getCanvas() as
         PixelInput);
+      loading && setLoading(false)
 
       if (hands.length > 0 && hands[0].keypoints3D) {
 
@@ -58,9 +60,7 @@ export const Video = () => {
         ]);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const landmark:any = hands[0].keypoints3D.map(val => [val.x, val.y, val.z]);
-        console.log(landmark);
-        
+        const landmark: any = hands[0].keypoints3D.map(val => [val.x, val.y, val.z]);
 
         const estimatedGestures = GE.estimate(landmark, 6.5);
 
@@ -100,12 +100,26 @@ export const Video = () => {
     };
   }, [detect, isEnabled, ready]);
 
+  const handleClick = () => {
+    setIsEnabled(!isEnabled)
+    setLoading(true)
+  }
+
   return (
     <div className={styles.video}>
       {isEnabled && (
-        <Webcam ref={cameraRef} videoConstraints={config} />
+        <>
+          <Webcam ref={cameraRef} videoConstraints={config} />
+          <div className={loading ? styles.loading : styles.loaded}>
+            {
+              loading
+              && <p className={styles.loadingText}>Loading...</p>
+            }
+          </div>
+        </>
+
       )}
-      <Button handleClick={() => setIsEnabled(!isEnabled)} text={isEnabled ? 'Off' : 'On'} />
+      <Button handleClick={handleClick} text={isEnabled ? 'Off' : 'On'} />
     </div>
   );
 };
