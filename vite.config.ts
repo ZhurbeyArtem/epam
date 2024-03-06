@@ -6,7 +6,6 @@ const config: UserConfig = defineConfig({
   plugins: [react(), svgr()],
   esbuild: {
     jsxFactory: "jsx",
-    jsxInject: `import { jsx } from 'react';`,
   },
   optimizeDeps: {
     esbuildOptions: {
