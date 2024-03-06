@@ -7,28 +7,29 @@ import '@tensorflow/tfjs-backend-webgl';
 import * as fp from 'fingerpose';
 import { thumbsDownGesture } from '../../fingers/ThumbDown';
 import { thumbsUpGesture } from '../../fingers/ThumbUp';
+import { PixelInput } from '@tensorflow-models/hand-pose-detection/dist/shared/calculators/interfaces/common_interfaces';
+import { IConfig} from '../../interfaces/Video';
 
-const config = {
+const config: IConfig = {
   width: 300,
   height: 300,
   facingMode: 'user',
 };
 
 export const Video = () => {
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [ready, setReady] = useState(false);
-  const modelRef = useRef(null);
-  const cameraRef = useRef(null);
-  const requestRef = useRef(null);
+  const [isEnabled, setIsEnabled] = useState<boolean>(false);
+  const [ready, setReady] = useState<boolean>(false);
+  const modelRef = useRef<null | handPoseDetection.HandDetector>(null);
+  const cameraRef = useRef<null | Webcam>(null);
+  const requestRef = useRef<null | number>(null);
 
   useEffect(() => {
     if (isEnabled) {
       const runHandpose = async () => {
         try {
           const model = handPoseDetection.SupportedModels.MediaPipeHands;
-          const detectorConfig = {
-            runtime: 'tfjs', // or 'tfjs',
-            solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/hands',
+          const detectorConfig: handPoseDetection.MediaPipeHandsTfjsModelConfig = {
+            runtime: 'tfjs',
             modelType: 'full',
           };
           modelRef.current = await handPoseDetection.createDetector(model, detectorConfig);
@@ -46,28 +47,29 @@ export const Video = () => {
 
   const detect = useCallback(async () => {
     if (typeof cameraRef.current !== 'undefined' && modelRef.current && isEnabled) {
-      const video = cameraRef.current.video;
-      const { videoWidth, videoHeight } = video;
-      video.width = videoWidth;
-      video.height = videoHeight;
 
-      const hands = await modelRef.current.estimateHands(video);
+      const hands: handPoseDetection.Hand[] = await modelRef.current.estimateHands((cameraRef.current as Webcam).getCanvas() as
+        PixelInput);
 
-      if (hands.length > 0) {
+      if (hands.length > 0 && hands[0].keypoints3D) {
 
         const GE = new fp.GestureEstimator([thumbsUpGesture,
           thumbsDownGesture
         ]);
-        const landmark = hands[0].keypoints3D.map(val => [val.x, val.y, val.z]);
-        const estimatedGestures = await GE.estimate(landmark, 6.5);
-console.log(estimatedGestures);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const landmark:any = hands[0].keypoints3D.map(val => [val.x, val.y, val.z]);
+        console.log(landmark);
+        
+
+        const estimatedGestures = GE.estimate(landmark, 6.5);
 
         if (estimatedGestures.gestures.length > 0) {
           const directionFinger = estimatedGestures.gestures.reduce((max, obj) => (obj.score > max.score ? obj : max), estimatedGestures.gestures[0]);
           if (directionFinger.name === 'thumbs_down' && directionFinger !== undefined) {
             window.scrollTo({
               top: window.scrollY + 100, // Прокрутить вниз на 100 пикселей
-              behavior: 'smooth' // Добавить плавность прокрутки
+              behavior: 'smooth' // Добавить плавность прокруткиP
             });
           }
           else if (directionFinger.name === 'thumbs_up' !== undefined) {
@@ -86,7 +88,7 @@ console.log(estimatedGestures);
       requestRef.current = requestAnimationFrame(detect);
     }
     return () => {
-      cancelAnimationFrame(requestRef.current);
+      cancelAnimationFrame(requestRef.current as number);
     };
   }, [ready, isEnabled]);
 
@@ -94,7 +96,7 @@ console.log(estimatedGestures);
     if (ready && isEnabled) requestRef.current = requestAnimationFrame(detect);
 
     return () => {
-      cancelAnimationFrame(requestRef.current);
+      cancelAnimationFrame(requestRef.current as number);
     };
   }, [detect, isEnabled, ready]);
 
