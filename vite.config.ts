@@ -1,8 +1,9 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
+import { UserConfig } from "vite";
 
-export default defineConfig({
+const config: UserConfig = defineConfig({
   plugins: [react(), svgr()],
   esbuild: {
     jsxFactory: "jsx",
@@ -34,3 +35,5 @@ export default defineConfig({
     },
   ],
 });
+
+export default config;
