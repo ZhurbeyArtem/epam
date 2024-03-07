@@ -1,14 +1,14 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import Webcam from 'react-webcam';
-import { Button } from '../Button/Button';
-import styles from './Video.module.css';
 import '@tensorflow/tfjs-backend-webgl';
-import * as fp from 'fingerpose';
-import { thumbsDownGesture } from '../../fingers/ThumbDown';
-import { thumbsUpGesture } from '../../fingers/ThumbUp';
-import { PixelInput } from '@tensorflow-models/hand-pose-detection/dist/shared/calculators/interfaces/common_interfaces';
+
+import { checkThumbAndFingers } from '../../utils/DetectFingerWay';
+import { Button } from '../Button/Button';
+
 import { IConfig } from '../../interfaces/Video';
+import styles from './Video.module.css';
+
 
 const config: IConfig = {
   width: 300,
@@ -22,7 +22,6 @@ export const Video = () => {
   const [ready, setReady] = useState<boolean>(false);
   const modelRef = useRef<null | handPoseDetection.HandDetector>(null);
   const cameraRef = useRef<null | Webcam>(null);
-  const requestRef = useRef<null | number>(null);
 
   useEffect(() => {
     if (isEnabled) {
@@ -46,59 +45,45 @@ export const Video = () => {
     }
   }, [isEnabled]);
 
-  const detect = useCallback(async () => {
+  const detect = async () => {
     if (typeof cameraRef.current !== 'undefined' && modelRef.current && isEnabled) {
 
-      const hands: handPoseDetection.Hand[] = await modelRef.current.estimateHands((cameraRef.current as Webcam).getCanvas() as
-        PixelInput);
+      const camera = cameraRef.current?.getCanvas()
+      if (camera === null || camera === undefined) return;
+      const hands: handPoseDetection.Hand[] = await modelRef.current.estimateHands(camera);
+
       loading && setLoading(false)
 
       if (hands.length > 0 && hands[0].keypoints3D) {
 
-        const GE = new fp.GestureEstimator([thumbsUpGesture,
-          thumbsDownGesture
-        ]);
+        const gestture = checkThumbAndFingers(hands[0].keypoints3D, hands[0].handedness)
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const landmark: any = hands[0].keypoints3D.map(val => [val.x, val.y, val.z]);
 
-        const estimatedGestures = GE.estimate(landmark, 6.5);
-
-        if (estimatedGestures.gestures.length > 0) {
-          const directionFinger = estimatedGestures.gestures.reduce((max, obj) => (obj.score > max.score ? obj : max), estimatedGestures.gestures[0]);
-          if (directionFinger.name === 'thumbs_down' && directionFinger !== undefined) {
-            window.scrollTo({
-              top: window.scrollY + 100, // Прокрутить вниз на 100 пикселей
-              behavior: 'smooth' // Добавить плавность прокруткиP
-            });
-          }
-          else if (directionFinger.name === 'thumbs_up' !== undefined) {
-            window.scrollTo({
-              top: window.scrollY - 100, // Прокрутить вниз на 100 пикселей
-              behavior: 'smooth' // Добавить плавность прокрутки
-            });
-          }
+        if (gestture === 'down') {
+          window.scrollTo({
+            top: window.scrollY + 100,
+            behavior: 'smooth'
+          });
         }
-
+        else if (gestture === 'up') {
+          window.scrollTo({
+            top: window.scrollY - 100,
+            behavior: 'smooth'
+          });
+        }
       }
-
     }
+  }
 
-    if (ready && isEnabled) {
-      requestRef.current = requestAnimationFrame(detect);
-    }
-    return () => {
-      cancelAnimationFrame(requestRef.current as number);
-    };
-  }, [ready, isEnabled]);
 
   useEffect(() => {
-    if (ready && isEnabled) requestRef.current = requestAnimationFrame(detect);
+    if (!ready || !isEnabled) return;
+    const interval = setInterval(detect, 100);
 
     return () => {
-      cancelAnimationFrame(requestRef.current as number);
+      clearInterval(interval);
     };
-  }, [detect, isEnabled, ready]);
+  }, [ready, isEnabled]);
 
   const handleClick = () => {
     setIsEnabled(!isEnabled)
