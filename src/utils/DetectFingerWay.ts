@@ -1,3 +1,5 @@
+import { Keypoint3D } from "../interfaces/Keypoint3D.interface";
+
 export function checkThumbAndFingers(keypoints: Keypoint3D[], handedness: string): string | undefined {
 // перевірка на достатню кількість точок
   if (keypoints.length < 5 * 4) {
@@ -45,9 +47,3 @@ function isFingerCurled(keypoints: Keypoint3D[], finger: number, handedness: str
 
 }
 
-interface Keypoint3D {
-  x: number;
-  y: number;
-  z?: number;
-  name?: string;
-}

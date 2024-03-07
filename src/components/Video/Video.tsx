@@ -6,7 +6,7 @@ import '@tensorflow/tfjs-backend-webgl';
 import { checkThumbAndFingers } from '../../utils/DetectFingerWay';
 import { Button } from '../Button/Button';
 
-import { IConfig } from '../../interfaces/Video';
+import { IConfig } from '../../interfaces/Video.interface';
 import styles from './Video.module.css';
 
 
@@ -56,7 +56,7 @@ export const Video = () => {
 
       if (hands.length > 0 && hands[0].keypoints3D) {
 
-        const gestture = checkThumbAndFingers(hands[0].keypoints3D, hands[0].handedness)
+        const gestture: string | undefined = checkThumbAndFingers(hands[0].keypoints3D, hands[0].handedness)
 
 
         if (gestture === 'down') {
