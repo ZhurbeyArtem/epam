@@ -62,7 +62,6 @@ export const Video = () => {
   }, [isEnabled]);
 
   const detect = async () => {
-    console.log('+++');
     try {
       if (cameraRef !== null && modelRef.current) {
         const camera = cameraRef.current?.getCanvas()
