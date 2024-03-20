@@ -19,60 +19,77 @@ const config: IConfig = {
 export const Video = () => {
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false)
-  const [ready, setReady] = useState<boolean>(false);
+  const [ready, setReady] = useState<boolean>(false); // перевірка чи загружена модель
   const modelRef = useRef<null | handPoseDetection.HandDetector>(null);
   const cameraRef = useRef<null | Webcam>(null);
 
   useEffect(() => {
-    if (isEnabled) {
-      const runHandpose = async () => {
-        try {
+    const runHandpose = async () => {
+      try {
+        if (isEnabled) {
+          setReady(false);
           const model = handPoseDetection.SupportedModels.MediaPipeHands;
           const detectorConfig: handPoseDetection.MediaPipeHandsTfjsModelConfig = {
             runtime: 'tfjs',
             modelType: 'full',
           };
+
           modelRef.current = await handPoseDetection.createDetector(model, detectorConfig);
-        } catch (e) {
-          console.log(e);
+          setReady(true);
+        } else {
+          setReady(false);
+          cameraRef.current = null;
+          if (modelRef.current) {
+            modelRef.current.dispose();
+            modelRef.current = null;
+          }
         }
-      };
-      runHandpose();
-      setReady(true);
-    } else {
-      cameraRef.current = null;
-      modelRef.current = null;
-    }
+      } catch (error) {
+        console.log("RunHandpose: ", error);
+        cameraRef.current = null;
+        if (modelRef.current) { // очистка при відключені компонента
+          modelRef.current.dispose();
+          modelRef.current = null;
+        }
+      }
+    };
+    runHandpose();
+    return () => { // очистка при розмонувані
+      if (modelRef.current) {
+        modelRef.current.dispose();
+      }
+    };
   }, [isEnabled]);
 
   const detect = async () => {
-    if (typeof cameraRef.current !== 'undefined' && modelRef.current && isEnabled) {
+    console.log('+++');
+    try {
+      if (cameraRef !== null && modelRef.current) {
+        const camera = cameraRef.current?.getCanvas()
+        if (camera === null || camera === undefined) return;
+        const hands: handPoseDetection.Hand[] = await modelRef.current.estimateHands(camera);
+        loading && setLoading(false)
+        if (hands.length > 0 && hands[0].keypoints3D) {
+          const gestture: string | undefined = checkThumbAndFingers(hands[0].keypoints3D, hands[0].handedness)
 
-      const camera = cameraRef.current?.getCanvas()
-      if (camera === null || camera === undefined) return;
-      const hands: handPoseDetection.Hand[] = await modelRef.current.estimateHands(camera);
-
-      loading && setLoading(false)
-
-      if (hands.length > 0 && hands[0].keypoints3D) {
-
-        const gestture: string | undefined = checkThumbAndFingers(hands[0].keypoints3D, hands[0].handedness)
-
-
-        if (gestture === 'down') {
-          window.scrollTo({
-            top: window.scrollY + 100,
-            behavior: 'smooth'
-          });
-        }
-        else if (gestture === 'up') {
-          window.scrollTo({
-            top: window.scrollY - 100,
-            behavior: 'smooth'
-          });
+          if (gestture === 'down') {
+            window.scrollTo({
+              top: window.scrollY + 100,
+              behavior: 'smooth'
+            });
+          }
+          else if (gestture === 'up') {
+            window.scrollTo({
+              top: window.scrollY - 100,
+              behavior: 'smooth'
+            });
+          }
         }
       }
+    } catch (error) {
+      console.log("Detect: ", error);
     }
+
   }
 
 
